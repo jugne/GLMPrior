@@ -1,0 +1,15 @@
+# Mac
+.DS_Store
+
+# IntelliJ
+/.idea
+/out
+/glmprior.iml
+
+# Build output
+/build-lib
+/build
+/dist
+/javadoc
+/beast-source
+/build-beast
