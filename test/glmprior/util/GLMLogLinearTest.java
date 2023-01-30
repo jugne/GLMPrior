@@ -10,17 +10,20 @@ public class GLMLogLinearTest {
 
     @Test
     public void testGLM() {
-        Function pred = new RealParameter("1.0 2.0 3.0 4.0");
+        Function pred1 = new RealParameter("1.0 2.0");
+        Function pred2 = new RealParameter("3.0 4.0");
         Function coeff = new RealParameter("0.3 0.5");
         Function ind = new BooleanParameter("1 1");
         Function scale = new RealParameter("2.0");
 
         GLMLogLinear glm = new GLMLogLinear();
         glm.initByName(
-                "predictors", pred,
+                "predictor", pred1,
+                "predictor", pred2,
                 "coefficients", coeff,
                 "indicators", ind,
-                "scaleFactor", scale);
+                "scaleFactor", scale,
+                "transform", false);
 
         for (int i = 0; i < glm.getDimension(); i++)
             System.out.print(glm.getArrayValue(i) + " ");
@@ -33,17 +36,20 @@ public class GLMLogLinearTest {
 
     @Test
     public void testGLMind0() {
-        Function pred = new RealParameter("1.0 2.0 3.0 4.0");
+        Function pred1 = new RealParameter("1.0 2.0");
+        Function pred2 = new RealParameter("3.0 4.0");
         Function coeff = new RealParameter("0.3 0.5");
         Function ind = new BooleanParameter("0 0");
         Function scale = new RealParameter("2.0");
 
         GLMLogLinear glm = new GLMLogLinear();
         glm.initByName(
-                "predictors", pred,
+                "predictor", pred1,
+                "predictor", pred2,
                 "coefficients", coeff,
                 "indicators", ind,
-                "scaleFactor", scale);
+                "scaleFactor", scale,
+                "transform", false);
 
         for (int i = 0; i < glm.getDimension(); i++)
             System.out.print(glm.getArrayValue(i) + " ");
@@ -56,7 +62,8 @@ public class GLMLogLinearTest {
 
     @Test
     public void testGLMerror() {
-        Function pred = new RealParameter("1.0 2.0 3.0 4.0");
+        Function pred1 = new RealParameter("1.0 2.0");
+        Function pred2 = new RealParameter("3.0 4.0");
         Function coeff = new RealParameter("0.3 0.5");
         Function ind = new BooleanParameter("1 1");
         Function scale = new RealParameter("2.0");
@@ -64,11 +71,13 @@ public class GLMLogLinearTest {
 
         GLMLogLinear glm = new GLMLogLinear();
         glm.initByName(
-                "predictors", pred,
+                "predictor", pred1,
+                "predictor", pred2,
                 "coefficients", coeff,
                 "indicators", ind,
                 "scaleFactor", scale,
-                "error", err);
+                "error", err,
+                "transform", false);
 
         for (int i = 0; i < glm.getDimension(); i++)
             System.out.print(glm.getArrayValue(i) + " ");
@@ -77,5 +86,31 @@ public class GLMLogLinearTest {
 
         Assert.assertEquals(2.0 * Math.exp(1.9), glm.getArrayValue(0), 1e-10);
         Assert.assertEquals(2.0 * Math.exp(2.8), glm.getArrayValue(1), 1e-10);
+    }
+
+    @Test
+    public void testGLMtransform() {
+        Function pred1 = new RealParameter("1.0 2.0");
+        Function pred2 = new RealParameter("3.0 4.0");
+        Function coeff = new RealParameter("0.3 0.5");
+        Function ind = new BooleanParameter("1 1");
+        Function scale = new RealParameter("2.0");
+
+        GLMLogLinear glm = new GLMLogLinear();
+        glm.initByName(
+                "predictor", pred1,
+                "predictor", pred2,
+                "coefficients", coeff,
+                "indicators", ind,
+                "scaleFactor", scale,
+                "transform", true);
+
+        for (int i = 0; i < glm.getDimension(); i++)
+            System.out.print(glm.getArrayValue(i) + " ");
+
+        Assert.assertEquals(2, glm.getDimension());
+
+        Assert.assertEquals(2.0 * Math.exp(-0.8), glm.getArrayValue(0), 1e-10);
+        Assert.assertEquals(2.0 * Math.exp(0.8), glm.getArrayValue(1), 1e-10);
     }
 }
