@@ -112,9 +112,6 @@ public class GLMLogLinear extends CalculationNode implements Function {
             }
             predictors = predictorsTInput.get();
         }
-//        Check that predictor values can be log scaled, meaning no values that are 0 or smaller
-//        Set predictors input to list double, or find a way to set values from doubles to input
-
     }
 
     @Override
