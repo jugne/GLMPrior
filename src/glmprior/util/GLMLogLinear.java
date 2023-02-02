@@ -55,15 +55,17 @@ public class GLMLogLinear extends CalculationNode implements Function {
         scaleFactor = scaleFactorInput.get();
         predictors = predictorsInput.get();
 
-        predictorsSize = 0;
+        parameterSize = predictorsInput.get().get(0).getDimension();
         for (Function pred : predictors)
-            predictorsSize += pred.getDimension();
+            if (parameterSize != pred.getDimension())
+                throw new IllegalArgumentException("GLM Predictors do not have the same dimension " +
+                        parameterSize + "!=" +  pred.getDimension());
 
-        if (predictorsSize % coefficients.getDimension() != 0)
+        if (parameterSize % coefficients.getDimension() != 0)
             throw new IllegalArgumentException("GLM Predictor list dimension is not a multiple "
                     + "of the number of GLM coefficients.");
 
-        parameterSize = predictorsSize/(coefficients.getDimension());
+//        parameterSize = predictorsSize/(coefficients.getDimension());
         coefficientsSize = coefficients.getDimension();
 
         if (indicators.getDimension() != coefficientsSize)
@@ -80,9 +82,18 @@ public class GLMLogLinear extends CalculationNode implements Function {
 
         if (errorInput.get() != null) {
             error = errorInput.get();
-            if (error.getDimension() != parameterSize)
+            if (error.getDimension() == 1) {
+                Double[] errorVector;
+                errorVector = new Double[parameterSize];
+                for (int i = 0; i < errorVector.length; i++) {
+                    errorVector[i] = error.getArrayValue();
+                }
+                error = new RealParameter(errorVector);
+            }
+
+            if (parameterSize % error.getDimension() != 0)
                 throw new IllegalArgumentException("GLM error term has an incorrect number "
-                + "of elements. It should be equal to parameter dimension.");
+                        + "of elements. TODO.");
         }
 
         if (transformInput.get()) {
@@ -129,7 +140,7 @@ public class GLMLogLinear extends CalculationNode implements Function {
         }
 
         if (error != null)
-            lograte += error.getArrayValue(i);
+            lograte += error.getArrayValue(i % error.getDimension());
 
         return scaleFactor.getArrayValue() * Math.exp(lograte);
     }
