@@ -4,12 +4,14 @@ import beast.base.core.Description;
 import beast.base.core.Input;
 import beast.base.inference.CalculationNode;
 import beast.base.core.Function;
+import beast.base.inference.parameter.BooleanParameter;
 import beast.base.inference.parameter.RealParameter;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
+//# TODO set dimension of indicators and coefficients automatically
 /**
  * @author Cecilia Valenzuela Agui
  */
@@ -24,16 +26,16 @@ public class GLMLogLinear extends CalculationNode implements Function {
             "One or more predictor for the GLM, e.g. numbers of flights between different locations",
             new ArrayList<>(), Input.Validate.REQUIRED);
 
-    public Input<Function> coefficientsInput = new Input<>("coefficients",
+    public Input<RealParameter> coefficientsInput = new Input<>("coefficients",
             "GLM coefficients.", Input.Validate.REQUIRED);
 
-    public Input<Function> indicatorsInput = new Input<>("indicators",
+    public Input<BooleanParameter> indicatorsInput = new Input<>("indicators",
             "Indicators for predictor inclusion/exclusion in GLM.", Input.Validate.REQUIRED);
 
-    public Input<Function> scaleFactorInput = new Input<>("scaleFactor",
+    public Input<RealParameter> scaleFactorInput = new Input<>("scaleFactor",
             "Scale factor.", Input.Validate.OPTIONAL);
 
-    public Input<Function> errorInput = new Input<>("error",
+    public Input<RealParameter> errorInput = new Input<>("error",
             "Error terms.", Input.Validate.OPTIONAL);
 
     public Input<Boolean> transformInput = new Input<>("transform",
@@ -45,8 +47,9 @@ public class GLMLogLinear extends CalculationNode implements Function {
             new ArrayList<>(), Input.Validate.OPTIONAL);
 
     List<Function> predictors;
-    Function coefficients, indicators, scaleFactor, error;
-    int parameterSize, coefficientsSize, predictorsSize;
+    RealParameter coefficients, scaleFactor, error;
+    BooleanParameter indicators;
+    int parameterSize, predictorN;
 
     @Override
     public void initAndValidate() {
@@ -55,24 +58,17 @@ public class GLMLogLinear extends CalculationNode implements Function {
         scaleFactor = scaleFactorInput.get();
         predictors = predictorsInput.get();
 
+        predictorN = predictorsInput.get().size();
         parameterSize = predictorsInput.get().get(0).getDimension();
         for (Function pred : predictors)
             if (parameterSize != pred.getDimension())
                 throw new IllegalArgumentException("GLM Predictors do not have the same dimension " +
                         parameterSize + "!=" +  pred.getDimension());
 
-        if (parameterSize % coefficients.getDimension() != 0)
-            throw new IllegalArgumentException("GLM Predictor list dimension is not a multiple "
-                    + "of the number of GLM coefficients.");
+        coefficients.setDimension(predictorN);
+        indicators.setDimension(predictorN);
 
-//        parameterSize = predictorsSize/(coefficients.getDimension());
-        coefficientsSize = coefficients.getDimension();
-
-        if (indicators.getDimension() != coefficientsSize)
-            throw new IllegalArgumentException("GLM Coefficients and indicators "
-                    + "do not have the same number of elements.");
-
-        if (indicators.getDimension() != coefficientsSize)
+        if (scaleFactor.getDimension() != 1)
             throw new IllegalArgumentException("Dimension of GLM scale factor should be 1.");
 
         for (int i = 0; i < indicators.getDimension(); i++) {
@@ -83,23 +79,18 @@ public class GLMLogLinear extends CalculationNode implements Function {
         if (errorInput.get() != null) {
             error = errorInput.get();
             if (error.getDimension() == 1) {
-                Double[] errorVector;
-                errorVector = new Double[parameterSize];
-                for (int i = 0; i < errorVector.length; i++) {
-                    errorVector[i] = error.getArrayValue();
-                }
-                error = new RealParameter(errorVector);
+               error.setDimension(parameterSize);
             }
 
             if (parameterSize % error.getDimension() != 0)
                 throw new IllegalArgumentException("GLM error term has an incorrect number "
-                        + "of elements. TODO.");
+                        + "of elements.");
         }
 
         if (transformInput.get()) {
             Double[] predT;
             double pred, mean, sd;
-            for (int j = 0; j < coefficientsSize; j++) {
+            for (int j = 0; j < predictorN; j++) {
                 predT = new Double[parameterSize];
                 mean = 0;
                 sd = 0;
