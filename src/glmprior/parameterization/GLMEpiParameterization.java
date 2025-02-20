@@ -26,6 +26,7 @@ import beast.base.core.Input;
 public class GLMEpiParameterization extends Parameterization {
 
     private static final double[] EMPTY_TIME_ARRAY = new double[0];
+    double[] ZERO_VALUE_ARRAY;
     double[][] ZERO_VALUE_MATRIX;
 
     int nTypes;

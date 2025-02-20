@@ -10,6 +10,7 @@
         <provider classname="glmprior.parameterization.GLMSkylineMatrixParameter"/>
         <provider classname="glmprior.parameterization.GLMTimedParameter"/>
         <provider classname="glmprior.parameterization.GLMCanonicalParameterization"/>
+        <provider classname="glmprior.parameterization.GLMEpiParameterization"/>
     </service>
 
     <service type="beastfx.app.inputeditor.InputEditor">
