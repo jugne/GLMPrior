@@ -6,6 +6,17 @@
         <provider classname="glmprior.util.GLMLogLinear"/>
         <provider classname="glmprior.util.GLMPrior"/>
         <provider classname="glmprior.util.ExtendedSwapOperator"/>
+        <provider classname="glmprior.parameterization.GLMSkylineVectorParameter"/>
+        <provider classname="glmprior.parameterization.GLMSkylineMatrixParameter"/>
+        <provider classname="glmprior.parameterization.GLMTimedParameter"/>
+        <provider classname="glmprior.parameterization.GLMCanonicalParameterization"/>
+    </service>
+
+    <service type="beastfx.app.inputeditor.InputEditor">
+        <provider classname="glmprior.beauti.GLMSkylineVectorInputEditor"/>
+        <provider classname="glmprior.beauti.GLMSkylineMatrixInputEditor"/>
+        <provider classname="glmprior.beauti.GLMTimedParameterInputEditor"/>
+        <provider classname="glmprior.beauti.GLMSkylineInputEditor"/>
     </service>
 
 </addon>
