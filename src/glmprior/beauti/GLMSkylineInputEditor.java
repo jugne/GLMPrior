@@ -151,8 +151,10 @@ public abstract class GLMSkylineInputEditor extends InputEditor.Base {
         glmValuesTableBoxCol.getChildren().add(estimateIndicatorsCheckBox);
         glmValuesTableBoxCol.getChildren().add(estimateErrorCheckBox);
 
-        estimateIndicatorsCheckBox.setSelected(isGLM && ((GLMLogLinear) skylineParameter.skylineValuesInput.get()).indicatorsInput.get().isEstimatedInput.get());
-        estimateErrorCheckBox.setSelected(isGLM && ((GLMLogLinear) skylineParameter.skylineValuesInput.get()).errorInput.get().isEstimatedInput.get());
+        estimateIndicatorsCheckBox.setSelected(isGLM && ((GLMLogLinear) skylineParameter.skylineValuesInput.get()).indicatorsInput.get() != null &&
+                ((GLMLogLinear) skylineParameter.skylineValuesInput.get()).indicatorsInput.get().isEstimatedInput.get());
+        estimateErrorCheckBox.setSelected(isGLM && ((GLMLogLinear) skylineParameter.skylineValuesInput.get()).errorInput.get() != null &&
+                ((GLMLogLinear) skylineParameter.skylineValuesInput.get()).errorInput.get().isEstimatedInput.get());
         if (isGLM && !((GLMLogLinear) skylineParameter.skylineValuesInput.get()).predictorsInput.get().isEmpty()) {
             showTableButton.setManaged(true);
             showTableButton.setVisible(true);
@@ -348,7 +350,7 @@ public abstract class GLMSkylineInputEditor extends InputEditor.Base {
             coefficients.isEstimatedInput.setValue(true, coefficients);
             sanitiseRealParameter(coefficients);
             BooleanParameter indicators = glmValue.indicatorsInput.get();
-            if (indicators == null) {
+            if (indicators == null){
                 if (!doc.pluginmap.containsKey(getGLMIndicatorParameterID())) {
                     indicators = new BooleanParameter("1");
                     indicators.setID(getGLMIndicatorParameterID());
@@ -358,6 +360,8 @@ public abstract class GLMSkylineInputEditor extends InputEditor.Base {
                 glmValue.indicatorsInput.setValue(indicators, glmValue);
             }
             indicators.setDimension(glmValue.predictorsInput.get().size());
+
+
 
             RealParameter error = glmValue.errorInput.get();
             if (error == null && estimateErrorCheckBox.isSelected()) {

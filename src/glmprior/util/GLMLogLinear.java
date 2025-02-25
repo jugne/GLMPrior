@@ -39,7 +39,7 @@ public class GLMLogLinear extends CalculationNode implements Function {
             "Error terms.", Input.Validate.OPTIONAL);
 
     public Input<Boolean> transformInput = new Input<>("transform",
-            "Boolean value to log transform and scale predictors. Default true.", true,
+            "Boolean value to log transform and scale predictors. Default true.", false,
             Input.Validate.OPTIONAL);
 
     public  Input<List<Function>>  predictorsTInput = new Input<>("predictorT",

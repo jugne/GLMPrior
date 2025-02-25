@@ -97,13 +97,15 @@ public class GLMSkylineMatrixInputEditor extends GLMSkylineInputEditor {
             else
                 valuesParam.setDimension(nTypes * (nTypes - 1) * nEpochs);
             sanitiseRealParameter(valuesParam);
+            ((RealParameter) skylineParameter.skylineValuesInput.get()).initAndValidate();
         }
         System.out.println("Number of epochs: " + nEpochs);
 
         if (skylineParameter.changeTimesInput.get() != null)
             ((RealParameter) skylineParameter.changeTimesInput.get()).initAndValidate();
-        if (!b || (((GLMLogLinear) skylineParameter.skylineValuesInput.get()).predictorsInput.get()) != null)
-            skylineParameter.initAndValidate();
+//        if (b && (((GLMLogLinear) skylineParameter.skylineValuesInput.get()).predictorsInput.get()) != null)
+//            ((RealParameter)((GLMLogLinear) skylineParameter.skylineValuesInput.get()).predictorsInput.get()).initAndValidate();
+        skylineParameter.initAndValidate();
     }
 
     @Override
@@ -149,19 +151,19 @@ public class GLMSkylineMatrixInputEditor extends GLMSkylineInputEditor {
                         glmValuesTable.getColumns().add(parentCol);
                     }
                     parentCol = new TableColumn<>("Epoch " + (k / ((nTypes)*(nTypes)) + 1));
-                    int finalColCount = colCount;
-                    parentCol.setCellValueFactory(cellData ->
-                            new SimpleStringProperty(cellData.getValue().get(finalColCount))
-                    );
+//                    int finalColCount = colCount;
+//                    parentCol.setCellValueFactory(cellData ->
+//                            new SimpleStringProperty(cellData.getValue().get(finalColCount))
+//                    );
                 }
 
-                if (k % nTypes == 0) {
-                    from = new TableColumn<>("From " + skylineParameter.typeSetInput.get().getTypeName(k/nTypes));
-                    int finalColCount2 = colCount;
-                    from.setCellValueFactory(cellData ->
-                            new SimpleStringProperty(cellData.getValue().get(finalColCount2))
-                    );
-                    fromID = k/nTypes;
+                if (k % ((nChanges+1)*nTypes) == 0) {
+                    from = new TableColumn<>("From " + skylineParameter.typeSetInput.get().getTypeName(k/((nChanges+1)*nTypes)));
+//                    int finalColCount2 = colCount;
+//                    from.setCellValueFactory(cellData ->
+//                            new SimpleStringProperty(cellData.getValue().get(finalColCount2))
+//                    );
+                    fromID = k/((nChanges+1)*nTypes);
 
                 } 
                 
