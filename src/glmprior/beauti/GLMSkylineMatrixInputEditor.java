@@ -141,50 +141,71 @@ public class GLMSkylineMatrixInputEditor extends GLMSkylineInputEditor {
 
         if (nTypes > 1 && !skylineParameter.isScalarInput.get()) {
             TableColumn<ObservableList<String>, String> parentCol = null;
-            TableColumn<ObservableList<String>, String> from = null;
+            TableColumn<ObservableList<String>, String> fromCol = null;
             int fromID = 0;
-            for (int k=0; k<(nChanges+1)*(nTypes)*(nTypes);k++){
-
-                int finalI = k + 1;
-                if (k % ((nTypes)*(nTypes)) == 0) {
-                    if (k > 0){
-                        glmValuesTable.getColumns().add(parentCol);
+            for (int intervals=0; intervals<(nChanges+1); intervals++){
+                parentCol = new TableColumn<>("Epoch " + (intervals + 1));
+                for (int from=0; from<nTypes; from++){
+                    fromCol = new TableColumn<>("From " + skylineParameter.typeSetInput.get().getTypeName(from));
+                    for (int to=0; to<nTypes; to++){
+                        if (from==to)
+                            continue;
+                        TableColumn<ObservableList<String>, String> toCol = new TableColumn<>("To " + skylineParameter.typeSetInput.get().getTypeName(to));
+                        int finalColCount2 = colCount;
+                        toCol.setCellValueFactory(cellData ->
+                                new SimpleStringProperty(cellData.getValue().get(finalColCount2))
+                        );
+                        colCount++;
+                        fromCol.getColumns().add(toCol);
                     }
-                    parentCol = new TableColumn<>("Epoch " + (k / ((nTypes)*(nTypes)) + 1));
-//                    int finalColCount = colCount;
-//                    parentCol.setCellValueFactory(cellData ->
-//                            new SimpleStringProperty(cellData.getValue().get(finalColCount))
-//                    );
+                    parentCol.getColumns().add(fromCol);
                 }
-
-                if (k % ((nChanges+1)*nTypes) == 0) {
-                    from = new TableColumn<>("From " + skylineParameter.typeSetInput.get().getTypeName(k/((nChanges+1)*nTypes)));
-//                    int finalColCount2 = colCount;
-//                    from.setCellValueFactory(cellData ->
-//                            new SimpleStringProperty(cellData.getValue().get(finalColCount2))
-//                    );
-                    fromID = k/((nChanges+1)*nTypes);
-
-                } 
-                
-                if (k%nTypes !=fromID) {
-                    TableColumn<ObservableList<String>, String> to = new TableColumn<>("To " + skylineParameter.typeSetInput.get().getTypeName(k%nTypes));
-                    int finalColCount3 = colCount;
-                    to.setCellValueFactory(cellData ->
-                            new SimpleStringProperty(cellData.getValue().get(finalColCount3))
-                    );
-                    colCount++;
-
-                    from.getColumns().add(to);
-                }
-
-                if (k % ((nTypes)*(nTypes)) != 0 && (k+1) % nTypes == 0) {
-                    parentCol.getColumns().add(from);
-                }
-                
-
+                glmValuesTable.getColumns().add(parentCol);
             }
-            glmValuesTable.getColumns().add(parentCol);//add last parent column
+
+
+//            for (int k=0; k<(nChanges+1)*(nTypes)*(nTypes);k++){
+//
+//                int finalI = k + 1;
+//                if (k % ((nTypes)*(nTypes)) == 0) {
+//                    if (k > 0){
+//                        glmValuesTable.getColumns().add(parentCol);
+//                    }
+//                    parentCol = new TableColumn<>("Epoch " + (k / ((nTypes)*(nTypes)) + 1));
+////                    int finalColCount = colCount;
+////                    parentCol.setCellValueFactory(cellData ->
+////                            new SimpleStringProperty(cellData.getValue().get(finalColCount))
+////                    );
+//                }
+//
+//                if (k % ((nChanges+1)*nTypes) == 0) {
+//                    from = new TableColumn<>("From " + skylineParameter.typeSetInput.get().getTypeName(k/((nChanges+1)*nTypes)));
+////                    int finalColCount2 = colCount;
+////                    from.setCellValueFactory(cellData ->
+////                            new SimpleStringProperty(cellData.getValue().get(finalColCount2))
+////                    );
+//                    fromID = k/((nChanges+1)*nTypes);
+//
+//                }
+//
+//                if (k%nTypes !=fromID) {
+//                    TableColumn<ObservableList<String>, String> to = new TableColumn<>("To " + skylineParameter.typeSetInput.get().getTypeName(k%nTypes));
+//                    int finalColCount3 = colCount;
+//                    to.setCellValueFactory(cellData ->
+//                            new SimpleStringProperty(cellData.getValue().get(finalColCount3))
+//                    );
+//                    colCount++;
+//
+//                    from.getColumns().add(to);
+//                }
+//
+//                if (k % ((nTypes)*(nTypes)) != 0 && (k+1) % nTypes == 0) {
+//                    parentCol.getColumns().add(from);
+//                }
+//
+//
+//            }
+//            glmValuesTable.getColumns().add(parentCol);//add last parent column
         } else {
 
             for (int i = 0; i < nChanges + 1; i++) {

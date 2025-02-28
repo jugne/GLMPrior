@@ -405,7 +405,18 @@ public abstract class GLMSkylineInputEditor extends InputEditor.Base {
         estimateErrorCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             GLMLogLinear glmValue = (GLMLogLinear) skylineParameter.skylineValuesInput.get();
             RealParameter error = glmValue.errorInput.get();
-            error.isEstimatedInput.setValue(newValue, error);
+            if (error == null && newValue){
+                if (!doc.pluginmap.containsKey(getGLMErrorParameterID())) {
+                    error = new RealParameter("0.001");
+                    error.setID(getGLMErrorParameterID());
+                    error.isEstimatedInput.setValue(newValue, error);
+                } else {
+                    error = (RealParameter) doc.pluginmap.get(getGLMErrorParameterID());
+                    error.isEstimatedInput.setValue(newValue, error);
+                }
+                glmValue.errorInput.setValue(error, glmValue);
+            }
+
             sync();
         });
 
