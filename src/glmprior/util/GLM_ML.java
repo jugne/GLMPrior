@@ -29,7 +29,7 @@ public class GLM_ML extends CalculationNode implements Function {
             new ArrayList<>(), Input.Validate.REQUIRED);
 
     public Input<ArrayList<RealParameter>> weightsInput = new Input<>("weights",
-            "GLM_ML weights for each layer (hidden and output).", Input.Validate.REQUIRED);
+            "GLM_ML weights for each layer (hidden and output).",new ArrayList<>(), Input.Validate.REQUIRED);
 
     public Input<IntegerParameter> nOutputsInput = new Input<>("nOutputs",
             "GLM_ML number of outputs the output layer. Default is 1.");
@@ -77,6 +77,7 @@ public class GLM_ML extends CalculationNode implements Function {
                         parameterSize + "!=" +  pred.getDimension());
 
         List<Integer> nodes = nodesInput.get();
+        nLayers = layersInput.get();
         if (nodes.size() != nLayers)
             throw new IllegalArgumentException("GLM number of nodes do not have the same dimension as number of layers " +
                     nodes.size() + "!=" + nLayers);
@@ -87,7 +88,7 @@ public class GLM_ML extends CalculationNode implements Function {
         weights = weightsInput.get();
         nWeights = new Integer[weights.size()];
         nOutputs = nOutputsInput.get().getValue();
-        nLayers = layersInput.get();
+
 
 
         for (int i = 0; i< nLayers; i++){
@@ -122,10 +123,12 @@ public class GLM_ML extends CalculationNode implements Function {
         // Hidden layers :
         for (int l = 0; l< nLayers; l++){
             if (l==0){
-                output = runLayer(inputData, Nd4j.create(weights.get(0).getDoubleValues()), GLM_ML::relu);
+                INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(0));
+                output = runLayer(predictors, w, GLM_ML::relu);
             }
             else{
-                output = runLayer(output, Nd4j.create(weights.get(l).getDoubleValues()), GLM_ML::relu);
+                INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(l));
+                output = runLayer(output, w, GLM_ML::relu);
             }
         }
 
@@ -134,7 +137,7 @@ public class GLM_ML extends CalculationNode implements Function {
     }
 
 
-    // could also just use activation functions from:
+    // TODO could also just use activation functions from:
     // https://github.com/deeplearning4j/deeplearning4j/blob/master/nd4j/nd4j-backends/nd4j-api-parent/nd4j-api/src/main/java/org/nd4j/linalg/activations/Activation.java
 
     private static INDArray softplus(INDArray z) {
