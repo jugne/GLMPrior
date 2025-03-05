@@ -31,12 +31,13 @@ class GLM_MLTests {
         // Define weights
         weights = new ArrayList<>();
         weights.add(new RealParameter("0.1 0.2 0.3 0.4")); // For first layer (nPredictors x nNodes)
+        weights.add(new RealParameter("0.1 0.2 0.3 0.4")); // For first layer (nPredictors x nNodes)
         weights.add(new RealParameter("0.7 0.8")); // Output layer
 
         // Define outputs and layers
         nOutputs = new IntegerParameter("1");
-        layers = 1; // One hidden layer
-        nodes = Arrays.asList(2); // One hidden layer with 2 nodes
+        layers = 2; // One hidden layer
+        nodes = Arrays.asList(2, 2); // One hidden layer with 2 nodes
 
         // Initialize GLM_ML instance
         glmML = new GLM_ML();
@@ -54,8 +55,8 @@ class GLM_MLTests {
         assertNotNull(glmML);
         assertEquals(2, glmML.predictorsInput.get().size());
         assertEquals(1, glmML.nOutputsInput.get().getValue());
-        assertEquals(1, glmML.layersInput.get());
-        assertEquals(1, glmML.nodesInput.get().size());
+        assertEquals(2, glmML.layersInput.get());
+        assertEquals(2, glmML.nodesInput.get().size());
         assertEquals(2, glmML.nodesInput.get().get(0));
     }
 
@@ -68,7 +69,7 @@ class GLM_MLTests {
 
     @Test
     void testInvalidNodesLayerMismatch() {
-        glmML.layersInput.setValue(2, glmML);
+        glmML.layersInput.setValue(5, glmML);
         assertThrows(IllegalArgumentException.class, glmML::initAndValidate);
     }
 

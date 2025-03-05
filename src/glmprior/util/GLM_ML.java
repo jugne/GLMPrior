@@ -37,7 +37,7 @@ public class GLM_ML extends CalculationNode implements Function {
             "Number of hidden layers in GLM_ML. Default is 1.", 1);
 
     public Input<List<Integer>> nodesInput = new Input<>("nodes",
-            "Number of nodes in each hidden layer in GLM_ML.", new ArrayList<>(), Input.Validate.REQUIRED);
+            "Number of nodes in each hidden layer in GLM_ML.", new ArrayList<>());
 
 
 
@@ -91,16 +91,20 @@ public class GLM_ML extends CalculationNode implements Function {
 
 
 
-        for (int i = 0; i< nLayers; i++){
-            if (i==0){// for 1st hidden first layer
-                nWeights[i] = nPredictor * nodes.get(0);
+        if (nLayers == 0) {
+            weights.get(0).setDimension(nPredictor * nOutputs);
+        } else {
+            for (int i = 0; i < nLayers; i++) {
+                if (i == 0) {
+                    nWeights[i] = nPredictor * nodes.get(0);
+                } else {
+                    nWeights[i] = nodes.get(i - 1) * nodes.get(i);
+                }
+                weights.get(i).setDimension(nWeights[i]);
             }
-            else{ // for other hidden layers
-                nWeights[i] = nodes.get(i-1) * nodes.get(i);
-            }
-            weights.get(i).setDimension(nWeights[i]);
+            weights.get(nLayers).setDimension(nodes.get(nLayers - 1) * nOutputs);
         }
-        weights.get(nLayers).setDimension(nodes.get(nLayers -1)*nOutputs);
+
     }
 
     @Override
@@ -118,23 +122,27 @@ public class GLM_ML extends CalculationNode implements Function {
         return output.getScalar(i).getDouble();
     }
 
-    private void recalculate(){
-
-        // Hidden layers :
-        for (int l = 0; l< nLayers; l++){
-            if (l==0){
-                INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(0));
-                output = runLayer(predictors, w, GLM_ML::relu);
+    private void recalculate() {
+        if (nLayers == 0) {
+            // Direct linear transformation without hidden layers
+            INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nOutputs);
+            output = predictors.mmul(w);
+        } else {
+            // Hidden layers
+            for (int l = 0; l < nLayers; l++) {
+                if (l == 0) {
+                    INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(0));
+                    output = runLayer(predictors, w, GLM_ML::relu);
+                } else {
+                    INDArray w = Nd4j.create(weights.get(l).getDoubleValues()).reshape(nodesInput.get().get(l - 1), nodesInput.get().get(l));
+                    output = runLayer(output, w, GLM_ML::relu);
+                }
             }
-            else{
-                INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(l));
-                output = runLayer(output, w, GLM_ML::relu);
-            }
+            // Output layer
+            output = runLayer(output, Nd4j.create(weights.get(nLayers).getDoubleValues()).reshape(nodesInput.get().get(nLayers - 1), nOutputs), GLM_ML::softplus);
         }
-
-        // Activation function:
-        output = runLayer(output, Nd4j.create(weights.get(nLayers).getDoubleValues()), GLM_ML::softplus);
     }
+
 
 
     // TODO could also just use activation functions from:
