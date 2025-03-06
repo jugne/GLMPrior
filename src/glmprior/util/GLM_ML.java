@@ -61,35 +61,36 @@ public class GLM_ML extends CalculationNode implements Function {
     INDArray output;
     ArrayList<RealParameter> weights;
     int parameterSize, nPredictor; // parameter size as instances in the original example
-    Integer[] nWeights;
     int nOutputs;
     int nLayers;
 
+    private INDArray[] weightMatrices;
+    private boolean needsRecalculation = true;
+
     @Override
     public void initAndValidate() {
-
-
         nPredictor = predictorsInput.get().size();
         parameterSize = predictorsInput.get().get(0).getDimension();
-        for (RealParameter pred : predictorsInput.get())
-            if (parameterSize != pred.getDimension())
+
+        for (RealParameter pred : predictorsInput.get()) {
+            if (parameterSize != pred.getDimension()) {
                 throw new IllegalArgumentException("GLM Predictors do not have the same dimension " +
-                        parameterSize + "!=" +  pred.getDimension());
+                        parameterSize + "!=" + pred.getDimension());
+            }
+        }
 
         List<Integer> nodes = nodesInput.get();
         nLayers = layersInput.get();
-        if (nodes.size() != nLayers)
-            throw new IllegalArgumentException("GLM number of nodes do not have the same dimension as number of layers " +
+
+        if (nLayers >0 && nodes.size() != nLayers) {
+            throw new IllegalArgumentException("GLM number of nodes do not match number of layers " +
                     nodes.size() + "!=" + nLayers);
+        }
 
-
-        // Convert predictor input to DoubleArray, make ND4J matrix and transpose
         predictors = Nd4j.create(convertToDoubleArray(predictorsInput.get())).transpose();
         weights = weightsInput.get();
-        nWeights = new Integer[weights.size()];
         nOutputs = nOutputsInput.get().getValue();
-
-
+        Integer[] nWeights = new Integer[weights.size()];
 
         if (nLayers == 0) {
             weights.get(0).setDimension(nPredictor * nOutputs);
@@ -105,6 +106,9 @@ public class GLM_ML extends CalculationNode implements Function {
             weights.get(nLayers).setDimension(nodes.get(nLayers - 1) * nOutputs);
         }
 
+        // Initialize weight matrices array
+        weightMatrices = new INDArray[nLayers + 1];
+        updateWeightMatrices();
     }
 
     @Override
@@ -114,33 +118,44 @@ public class GLM_ML extends CalculationNode implements Function {
 
     @Override
     public double getArrayValue(int i) {
-        for (RealParameter w : weights){
-            if (w.somethingIsDirty()){ // recalculate if new weights were proposed
-                recalculate();
+        checkAndUpdateWeights();  // Ensure latest weights before computation
+        if (needsRecalculation) {
+            recalculate();
+            needsRecalculation = false;
+        }
+        return output.getDouble(i);
+    }
+
+    private void checkAndUpdateWeights() {
+        boolean updated = false;
+
+        for (int i = 0; i < weights.size(); i++) {
+            if (weights.get(i).somethingIsDirty()) {
+                // Update the corresponding weight matrix
+                weightMatrices[i].assign(Nd4j.create(weights.get(i).getDoubleValues()));
+                updated = true;
             }
         }
-        return output.getScalar(i).getDouble();
+
+        if (updated) {
+            needsRecalculation = true;  // Trigger recalculation only if weights changed
+        }
     }
 
     private void recalculate() {
         if (nLayers == 0) {
-            // Direct linear transformation without hidden layers
-            INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nOutputs);
-            output = predictors.mmul(w);
-        } else {
-            // Hidden layers
-            for (int l = 0; l < nLayers; l++) {
-                if (l == 0) {
-                    INDArray w = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(0));
-                    output = runLayer(predictors, w, GLM_ML::relu);
-                } else {
-                    INDArray w = Nd4j.create(weights.get(l).getDoubleValues()).reshape(nodesInput.get().get(l - 1), nodesInput.get().get(l));
-                    output = runLayer(output, w, GLM_ML::relu);
-                }
-            }
-            // Output layer
-            output = runLayer(output, Nd4j.create(weights.get(nLayers).getDoubleValues()).reshape(nodesInput.get().get(nLayers - 1), nOutputs), GLM_ML::softplus);
+            output = predictors.mmul(weightMatrices[0]);
+            return;
         }
+
+        output = predictors.dup();  // Avoid modifying predictors directly
+
+        for (int l = 0; l < nLayers; l++) {
+            output = runLayer(output, weightMatrices[l], GLM_ML::relu);
+        }
+
+        // Output layer
+        output = runLayer(output, weightMatrices[nLayers], GLM_ML::softplus);
     }
 
 
@@ -158,10 +173,22 @@ public class GLM_ML extends CalculationNode implements Function {
 
     private static INDArray runLayer(INDArray x1, INDArray x2, java.util.function.Function<INDArray, INDArray> activationFunction) {
         INDArray z = x1.mmul(x2);
-        if (activationFunction != null) {
-            z = activationFunction.apply(z);
+        return (activationFunction != null) ? activationFunction.apply(z) : z;
+    }
+
+    private void updateWeightMatrices() {
+        if (nLayers == 0) {
+            weightMatrices[0] = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nOutputs);
+        } else {
+            for (int i = 0; i < nLayers; i++) {
+                if (i == 0) {
+                    weightMatrices[i] = Nd4j.create(weights.get(0).getDoubleValues()).reshape(nPredictor, nodesInput.get().get(0));
+                } else {
+                    weightMatrices[i] = Nd4j.create(weights.get(i).getDoubleValues()).reshape(nodesInput.get().get(i - 1), nodesInput.get().get(i));
+                }
+            }
+            weightMatrices[nLayers] = Nd4j.create(weights.get(nLayers).getDoubleValues()).reshape(nodesInput.get().get(nLayers - 1), nOutputs);
         }
-        return z;
     }
 
 
