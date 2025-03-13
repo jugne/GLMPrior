@@ -33,13 +33,13 @@ public class GLMLogLinear extends CalculationNode implements Function {
             "Indicators for predictor inclusion/exclusion in GLM.", Input.Validate.REQUIRED);
 
     public Input<RealParameter> scaleFactorInput = new Input<>("scaleFactor",
-            "Scale factor.", Input.Validate.OPTIONAL);
+            "Scale factor.", new RealParameter("1.0"), Input.Validate.OPTIONAL);
 
     public Input<RealParameter> errorInput = new Input<>("error",
             "Error terms.", Input.Validate.OPTIONAL);
 
     public Input<Boolean> transformInput = new Input<>("transform",
-            "Boolean value to log transform and scale predictors. Default true.", true,
+            "Boolean value to log transform and scale predictors. Default true.", false,
             Input.Validate.OPTIONAL);
 
     public  Input<List<Function>>  predictorsTInput = new Input<>("predictorT",
